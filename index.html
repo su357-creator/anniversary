@@ -5,8 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>校慶闖關系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .completed { background-color: #10b981 !important; color: white !important; }
+        .failed { background-color: #ef4444 !important; color: white !important; }
+    </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-gray-100 min-h-screen p-4">
 
     <div id="login-view" class="max-w-md mx-auto bg-white p-8 rounded-2xl shadow-xl mt-10">
         <h1 class="text-2xl font-bold text-center mb-6">校慶闖關登入</h1>
@@ -15,14 +19,15 @@
         <button id="login-btn" class="w-full bg-indigo-600 text-white p-3 rounded-xl font-bold">開始闖關</button>
     </div>
 
-    <div id="game-view" class="hidden max-w-2xl mx-auto p-4">
+    <div id="game-view" class="hidden max-w-2xl mx-auto">
         <div class="bg-white p-4 rounded-xl shadow mb-6 text-center">
             <h2 id="user-display" class="font-bold text-lg"></h2>
+            <p id="progress" class="text-indigo-600 font-bold">完成 0 / 11 關</p>
         </div>
-        <div id="grid" class="grid grid-cols-3 gap-4"></div>
+        <div id="grid" class="grid grid-cols-3 md:grid-cols-4 gap-4"></div>
     </div>
 
-    <div id="quiz-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center p-4">
+    <div id="quiz-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
         <div class="bg-white p-8 rounded-2xl w-full max-w-lg">
             <h2 id="quiz-title" class="text-xl font-bold mb-4"></h2>
             <div id="options" class="space-y-3"></div>
@@ -30,45 +35,81 @@
     </div>
 
     <script>
-        // 1. 資料庫
+        // 資料庫
         const STAGE_DATA = {
-            1: { q: "校慶題目1", a: ["A", "B", "C", "D"], ans: 0 },
-            2: { q: "校慶題目2", a: ["A", "B", "C", "D"], ans: 0 }
-            // 你可以在此繼續填寫 3 到 11 關
+            1: { q: "校慶慶祝的是學校幾週年？", a: ["20週年", "30週年", "40週年", "50週年"], ans: 2 },
+            2: { q: "學校的主色調是什麼？", a: ["紅色", "藍色", "綠色", "黃色"], ans: 1 },
+            3: { q: "圖書館位於哪一棟？", a: ["A棟", "B棟", "C棟", "D棟"], ans: 0 },
+            4: { q: "第四關題目", a: ["A", "B", "C", "D"], ans: 0 },
+            5: { q: "第五關題目", a: ["A", "B", "C", "D"], ans: 0 },
+            6: { q: "第六關題目", a: ["A", "B", "C", "D"], ans: 0 },
+            7: { q: "第七關題目", a: ["A", "B", "C", "D"], ans: 0 },
+            8: { q: "第八關題目", a: ["A", "B", "C", "D"], ans: 0 },
+            9: { q: "第九關題目", a: ["A", "B", "C", "D"], ans: 0 },
+            10: { q: "第十關題目", a: ["A", "B", "C", "D"], ans: 0 },
+            11: { q: "第十一關題目", a: ["A", "B", "C", "D"], ans: 0 }
         };
 
-        let state = { done: [], failed: [] };
+        let state = { user: null, done: [], failed: [] };
 
-        // 2. 定義功能函數 (全部放在最外層)
+        // 渲染格網
         function renderGrid() {
             const grid = document.getElementById('grid');
             grid.innerHTML = '';
             for(let i = 1; i <= 11; i++) {
-                grid.innerHTML += `<div class="p-6 bg-white rounded-xl shadow text-center font-bold">第 ${i} 關</div>`;
+                let statusClass = '';
+                if(state.done.includes(i)) statusClass = 'completed';
+                else if(state.failed.includes(i)) statusClass = 'failed';
+                grid.innerHTML += `<div class="p-6 bg-white rounded-xl shadow text-center font-bold border-2 ${statusClass}">第 ${i} 關</div>`;
+            }
+            document.getElementById('progress').innerText = `完成 ${state.done.length} / 11 關`;
+        }
+
+        // 開啟題目
+        function openQuiz(id) {
+            const stageId = parseInt(id);
+            if(state.done.includes(stageId)) return alert("這關已經過囉！");
+            if(state.failed.includes(stageId)) return alert("這關已失敗，無法再次挑戰。");
+            
+            document.getElementById('quiz-modal').classList.remove('hidden');
+            document.getElementById('quiz-title').innerText = `第 ${id} 關：${STAGE_DATA[id].q}`;
+            const optDiv = document.getElementById('options');
+            optDiv.innerHTML = '';
+            STAGE_DATA[id].a.forEach((txt, i) => {
+                optDiv.innerHTML += `<button onclick="check(${id}, ${i})" class="w-full p-3 border rounded-xl hover:bg-gray-100">${txt}</button>`;
+            });
+        }
+
+        // 檢查答案
+        function check(id, selected) {
+            const stageId = parseInt(id);
+            if(selected === STAGE_DATA[id].ans) {
+                alert("恭喜答對！");
+                state.done.push(stageId);
+                document.getElementById('quiz-modal').classList.add('hidden');
+                renderGrid();
+                if([3, 6, 11].includes(state.done.length)) alert("恭喜獲得獎勵！");
+            } else {
+                state.failed.push(stageId);
+                alert("答案錯誤，該關卡已被鎖定！");
+                document.getElementById('quiz-modal').classList.remove('hidden'); // 這裡修正
+                document.getElementById('quiz-modal').classList.add('hidden');
+                renderGrid();
             }
         }
 
-        function openQuiz(id) {
-            document.getElementById('quiz-modal').classList.remove('hidden');
-            document.getElementById('quiz-title').innerText = "第 " + id + " 關";
-            // 這裡可以加入選項渲染邏輯
-        }
-
-        // 3. 確保頁面載入後再綁定事件
+        // 初始化
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('login-btn').addEventListener('click', () => {
                 const cls = document.getElementById('class-input').value;
                 const no = document.getElementById('no-input').value;
+                if(!cls || !no) return alert("請輸入班級與座號！");
                 
-                if(!cls || !no) return alert("請輸入班級與座號");
-
+                state.user = { cls, no };
                 document.getElementById('login-view').classList.add('hidden');
                 document.getElementById('game-view').classList.remove('hidden');
-                document.getElementById('user-display').innerText = cls + "班 " + no + "號";
-                
-                renderGrid(); // 此時 renderGrid 一定已被定義，不會再報錯
-            });
-        });
-    </script>
-</body>
-</html>
+                document.getElementById('user-display').innerText = `${cls}班 ${no}號`;
+                renderGrid();
+
+                const stage = new URLSearchParams(window.location.search).get('stage');
+                if(stage &&
