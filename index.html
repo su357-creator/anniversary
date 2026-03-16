@@ -35,42 +35,39 @@
     </div>
 
     <script>
-        // 資料庫
+        // 題目資料庫
         const STAGE_DATA = {
             1: { q: "校慶慶祝的是學校幾週年？", a: ["20週年", "30週年", "40週年", "50週年"], ans: 2 },
             2: { q: "學校的主色調是什麼？", a: ["紅色", "藍色", "綠色", "黃色"], ans: 1 },
             3: { q: "圖書館位於哪一棟？", a: ["A棟", "B棟", "C棟", "D棟"], ans: 0 },
-            4: { q: "第四關題目", a: ["A", "B", "C", "D"], ans: 0 },
-            5: { q: "第五關題目", a: ["A", "B", "C", "D"], ans: 0 },
-            6: { q: "第六關題目", a: ["A", "B", "C", "D"], ans: 0 },
-            7: { q: "第七關題目", a: ["A", "B", "C", "D"], ans: 0 },
-            8: { q: "第八關題目", a: ["A", "B", "C", "D"], ans: 0 },
-            9: { q: "第九關題目", a: ["A", "B", "C", "D"], ans: 0 },
-            10: { q: "第十關題目", a: ["A", "B", "C", "D"], ans: 0 },
-            11: { q: "第十一關題目", a: ["A", "B", "C", "D"], ans: 0 }
+            4: { q: "第四關題目", a: ["選項A", "選項B", "選項C", "選項D"], ans: 0 },
+            5: { q: "第五關題目", a: ["選項A", "選項B", "選項C", "選項D"], ans: 0 },
+            6: { q: "第六關題目", a: ["選項A", "選項B", "選項C", "選項D"], ans: 0 },
+            7: { q: "第七關題目", a: ["選項A", "選項B", "選項C", "選項D"], ans: 0 },
+            8: { q: "第八關題目", a: ["選項A", "選項B", "選項C", "選項D"], ans: 0 },
+            9: { q: "第九關題目", a: ["選項A", "選項B", "選項C", "選項D"], ans: 0 },
+            10: { q: "第十關題目", a: ["選項A", "選項B", "選項C", "選項D"], ans: 0 },
+            11: { q: "第十一關題目", a: ["選項A", "選項B", "選項C", "選項D"], ans: 0 }
         };
 
-        let state = { user: null, done: [], failed: [] };
+        let state = { done: [], failed: [] };
 
-        // 渲染格網
         function renderGrid() {
             const grid = document.getElementById('grid');
             grid.innerHTML = '';
             for(let i = 1; i <= 11; i++) {
-                let statusClass = '';
-                if(state.done.includes(i)) statusClass = 'completed';
-                else if(state.failed.includes(i)) statusClass = 'failed';
-                grid.innerHTML += `<div class="p-6 bg-white rounded-xl shadow text-center font-bold border-2 ${statusClass}">第 ${i} 關</div>`;
+                let css = 'bg-white';
+                if(state.done.includes(i)) css = 'completed';
+                else if(state.failed.includes(i)) css = 'failed';
+                grid.innerHTML += `<div class="p-6 ${css} rounded-xl shadow text-center font-bold">第 ${i} 關</div>`;
             }
             document.getElementById('progress').innerText = `完成 ${state.done.length} / 11 關`;
         }
 
-        // 開啟題目
         function openQuiz(id) {
-            const stageId = parseInt(id);
-            if(state.done.includes(stageId)) return alert("這關已經過囉！");
-            if(state.failed.includes(stageId)) return alert("這關已失敗，無法再次挑戰。");
-            
+            const sId = parseInt(id);
+            if(state.done.includes(sId)) return alert("這關已經過囉！");
+            if(state.failed.includes(sId)) return alert("很遺憾，這關已鎖定。");
             document.getElementById('quiz-modal').classList.remove('hidden');
             document.getElementById('quiz-title').innerText = `第 ${id} 關：${STAGE_DATA[id].q}`;
             const optDiv = document.getElementById('options');
@@ -80,36 +77,32 @@
             });
         }
 
-        // 檢查答案
         function check(id, selected) {
-            const stageId = parseInt(id);
             if(selected === STAGE_DATA[id].ans) {
-                alert("恭喜答對！");
-                state.done.push(stageId);
-                document.getElementById('quiz-modal').classList.add('hidden');
-                renderGrid();
-                if([3, 6, 11].includes(state.done.length)) alert("恭喜獲得獎勵！");
+                state.done.push(parseInt(id));
+                alert("答對了！");
             } else {
-                state.failed.push(stageId);
-                alert("答案錯誤，該關卡已被鎖定！");
-                document.getElementById('quiz-modal').classList.remove('hidden'); // 這裡修正
-                document.getElementById('quiz-modal').classList.add('hidden');
-                renderGrid();
+                state.failed.push(parseInt(id));
+                alert("答案錯誤，關卡鎖定！");
             }
+            document.getElementById('quiz-modal').classList.add('hidden');
+            renderGrid();
         }
 
-        // 初始化
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('login-btn').addEventListener('click', () => {
                 const cls = document.getElementById('class-input').value;
                 const no = document.getElementById('no-input').value;
-                if(!cls || !no) return alert("請輸入班級與座號！");
-                
-                state.user = { cls, no };
+                if(!cls || !no) return alert("請輸入班級座號");
                 document.getElementById('login-view').classList.add('hidden');
                 document.getElementById('game-view').classList.remove('hidden');
-                document.getElementById('user-display').innerText = `${cls}班 ${no}號`;
+                document.getElementById('user-display').innerText = cls + "班 " + no + "號";
                 renderGrid();
-
-                const stage = new URLSearchParams(window.location.search).get('stage');
-                if(stage &&
+                const urlParams = new URLSearchParams(window.location.search);
+                const s = urlParams.get('stage');
+                if(s && STAGE_DATA[s]) setTimeout(() => openQuiz(s), 500);
+            });
+        });
+    </script>
+</body>
+</html>
