@@ -2,13 +2,17 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <title>校慶闖關活動</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>校慶闖關系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .completed { background-color: #10b981 !important; color: white; }
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap');
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f3f4f6; }
+        .completed { background-color: #10b981 !important; color: white !important; }
+        .failed { background-color: #ef4444 !important; color: white !important; }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen p-4">
+<body class="min-h-screen p-4">
 
     <div id="login-view" class="max-w-md mx-auto bg-white p-8 rounded-2xl shadow-xl mt-10">
         <h1 class="text-2xl font-bold text-center mb-6">校慶闖關登入</h1>
@@ -33,87 +37,12 @@
     </div>
 
     <script>
-        // 【完整 11 關題目資料庫】
+        // 【題庫設定】在此處修改你的 11 關題目與答案
         const STAGE_DATA = {
             1: { q: "校慶慶祝的是學校幾週年？", a: ["20週年", "30週年", "40週年", "50週年"], ans: 2 },
             2: { q: "學校的主色調是什麼？", a: ["紅色", "藍色", "綠色", "黃色"], ans: 1 },
             3: { q: "圖書館位於哪一棟？", a: ["A棟", "B棟", "C棟", "D棟"], ans: 0 },
-            4: { q: "第四關題目", a: ["選項A", "選項B", "選項C", "選項D"], ans: 0 },
-            5: { q: "第五關題目", a: ["選項A", "選項B", "選項C", "選項D"], ans: 0 },
-            6: { q: "第六關題目", a: ["選項A", "選項B", "選項C", "選項D"], ans: 0 },
-            7: { q: "第七關題目", a: ["選項A", "選項B", "選項C", "選項D"], ans: 0 },
-            8: { q: "第八關題目", a: ["選項A", "選項B", "選項C", "選項D"], ans: 0 },
-            9: { q: "第九關題目", a: ["選項A", "選項B", "選項C", "選項D"], ans: 0 },
-            10: { q: "第十關題目", a: ["選項A", "選項B", "選項C", "選項D"], ans: 0 },
-            11: { q: "第十一關題目", a: ["選項A", "選項B", "選項C", "選項D"], ans: 0 }
-        };
-
-        let state = { user: null, done: [] };
-
-        // 登入邏輯
-        document.getElementById('login-btn').addEventListener('click', () => {
-            const cls = document.getElementById('class-input').value;
-            const no = document.getElementById('no-input').value;
-            if(!cls || !no) return alert("請輸入班級與座號！");
-            state.user = { cls, no };
-            document.getElementById('login-view').classList.add('hidden');
-            document.getElementById('game-view').classList.remove('hidden');
-            document.getElementById('user-display').innerText = `${cls}班 ${no}號`;
-            renderGrid();
-        });
-
-        // 繪製格網
-        function renderGrid() {
-            const grid = document.getElementById('grid');
-            grid.innerHTML = '';
-            for(let i = 1; i <= 11; i++) {
-                const isDone = state.done.includes(i);
-                grid.innerHTML += `
-                    <div class="p-6 bg-white rounded-xl shadow text-center font-bold ${isDone ? 'completed' : ''}">
-                        第 ${i} 關
-                    </div>`;
-            }
-            document.getElementById('progress').innerText = `完成 ${state.done.length} / 11 關`;
-        }
-
-        // 自動觸發題目邏輯 (掃碼用)
-        window.onload = () => {
-            const stage = new URLSearchParams(window.location.search).get('stage');
-            if(stage && STAGE_DATA[stage]) {
-                // 等登入後再觸發，或是直接彈出
-                setTimeout(() => openQuiz(stage), 500);
-            }
-        };
-
-        function openQuiz(id) {
-            if(state.done.includes(parseInt(id))) return alert("這關已經過囉！");
-            document.getElementById('quiz-modal').classList.remove('hidden');
-            document.getElementById('quiz-title').innerText = `第 ${id} 關：${STAGE_DATA[id].q}`;
-            const optDiv = document.getElementById('options');
-            optDiv.innerHTML = '';
-            STAGE_DATA[id].a.forEach((txt, i) => {
-                optDiv.innerHTML += `<button onclick="check(${id}, ${i})" class="w-full p-3 border rounded-xl hover:bg-gray-100">${txt}</button>`;
-            });
-        }
-
-        function check(id, selected) {
-            if(selected === STAGE_DATA[id].ans) {
-                alert("答對了！");
-                state.done.push(parseInt(id));
-                document.getElementById('quiz-modal').classList.add('hidden');
-                renderGrid();
-                checkRewards();
-            } else {
-                alert("再想想喔！");
-            }
-        }
-
-        function checkRewards() {
-            const c = state.done.length;
-            if(c === 3) alert("恭喜獲得小獎！");
-            if(c === 6) alert("恭喜獲得中獎！");
-            if(c === 11) alert("恭喜獲得大獎！");
-        }
-    </script>
-</body>
-</html>
+            4: { q: "第四關題目", a: ["A", "B", "C", "D"], ans: 0 },
+            5: { q: "第五關題目", a: ["A", "B", "C", "D"], ans: 0 },
+            6: { q: "第六關題目", a: ["A", "B", "C", "D"], ans: 0 },
+            7: { q: "第七關題目", a: ["A", "B
