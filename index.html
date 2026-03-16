@@ -11,7 +11,7 @@
         <h1 class="text-2xl font-bold text-center mb-6">校慶闖關登入</h1>
         <input type="text" id="class-input" placeholder="班級" class="w-full p-3 border rounded-xl mb-4">
         <input type="text" id="no-input" placeholder="座號" class="w-full p-3 border rounded-xl mb-6">
-        <button onclick="login()" class="w-full bg-indigo-600 text-white p-3 rounded-xl font-bold">開始闖關</button>
+        <button id="login-btn" class="w-full bg-indigo-600 text-white p-3 rounded-xl font-bold">開始闖關</button>
     </div>
 
     <div id="game-view" class="hidden max-w-2xl mx-auto p-4">
@@ -22,9 +22,8 @@
     </div>
 
     <script>
-        // 確認 login 函數被正確定義
-        function login() {
-            console.log("登入按鈕被點擊了");
+        // 為了確保按鈕絕對能被偵測到，我們改用監聽器方式
+        document.getElementById('login-btn').addEventListener('click', function() {
             const cls = document.getElementById('class-input').value;
             const no = document.getElementById('no-input').value;
             
@@ -33,15 +32,14 @@
                 return;
             }
 
-            // 隱藏登入頁，顯示遊戲頁
+            // 切換畫面
             document.getElementById('login-view').classList.add('hidden');
             document.getElementById('game-view').classList.remove('hidden');
-            
             document.getElementById('user-display').innerText = cls + " 班 " + no + " 號";
             
             // 初始化格子
             renderGrid();
-        }
+        });
 
         function renderGrid() {
             const grid = document.getElementById('grid');
