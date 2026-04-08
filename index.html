@@ -32,13 +32,14 @@
             </div>
 
             <p id="progress" class="text-indigo-600 font-bold">完成 0 / 11 關</p>
+            <p class="text-[10px] text-gray-400 mt-1">請至各關卡掃描 QR Code 挑戰</p>
             <button onclick="logout()" class="absolute top-2 right-2 text-xs text-gray-400 underline">登出/重設</button>
         </div>
         <div id="grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
     </div>
 
     <div id="quiz-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-        <div class="bg-white p-8 rounded-2xl w-full max-w-lg">
+        <div class="bg-white p-8 rounded-2xl w-full max-w-lg shadow-2xl">
             <h2 id="quiz-title" class="text-xl font-bold mb-4"></h2>
             <div id="options" class="space-y-3"></div>
             <button onclick="closeModal()" class="mt-4 w-full text-gray-400 text-sm italic underline text-center">暫時關閉</button>
@@ -74,8 +75,9 @@
                 if(state.done.includes(i)) css = 'completed';
                 else if(state.failed.includes(i)) css = 'failed';
                 
+                // 這裡移除了 onclick 和 cursor-pointer，確保學生不能亂點其他關卡
                 grid.innerHTML += `
-                    <div class="p-3 ${css} rounded-xl shadow text-center flex flex-col justify-center items-center min-h-[90px] cursor-pointer" onclick="openQuiz(${i})">
+                    <div class="p-3 ${css} rounded-xl shadow text-center flex flex-col justify-center items-center min-h-[90px]">
                         <span class="text-[10px] opacity-70 uppercase tracking-tighter">Stage ${i}</span>
                         <span class="font-bold text-xs mt-1 leading-tight">${STAGE_DATA[i].name}</span>
                     </div>`;
@@ -125,7 +127,7 @@
         }
 
         function logout() {
-            if(confirm("確定要重設紀錄嗎？（清除後將清空所有進度）")) {
+            if(confirm("確定要重設紀錄嗎？")) {
                 localStorage.removeItem('quiz_state');
                 location.reload();
             }
@@ -152,6 +154,8 @@
             document.getElementById('game-view').classList.remove('hidden');
             document.getElementById('user-display').innerText = `${state.user.cls}班 ${state.user.no}號`;
             renderGrid();
+            
+            // 唯一觸發題目的地方：讀取網址的 stage 參數
             const s = new URLSearchParams(window.location.search).get('stage');
             if(s && STAGE_DATA[s]) setTimeout(() => openQuiz(s), 500);
         }
