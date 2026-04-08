@@ -169,10 +169,19 @@
             document.getElementById('game-view').classList.remove('hidden');
             document.getElementById('user-display').innerText = `${state.user.cls} 班 ${state.user.no} 號`;
             renderGrid();
+            
+            // --- 加密對照表開始 ---
+            const SECRET_MAP = {
+                "aX7k": 1, "mP2q": 2, "vN9d": 3, "bR4w": 4, "tC8f": 5,
+                "hY5j": 6, "eZ3s": 7, "kL6m": 8, "pW1v": 9, "dG8n": 10, "qF4b": 11
+            };
             const s = new URLSearchParams(window.location.search).get('stage');
-            if(s && STAGE_DATA[s]) {
-                setTimeout(() => openQuiz(s), 500);
+            const realStage = SECRET_MAP[s]; // 將亂碼翻譯回真實關卡數字
+            
+            if(realStage && STAGE_DATA[realStage]) {
+                setTimeout(() => openQuiz(realStage), 500);
             }
+            // --- 加密對照表結束 ---
         }
 
         document.addEventListener('DOMContentLoaded', () => {
