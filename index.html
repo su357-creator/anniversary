@@ -6,43 +6,71 @@
     <title>修德 60 周年校慶闖關</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .completed { background-color: #10b981 !important; color: white !important; }
-        .failed { background-color: #ef4444 !important; color: white !important; }
-        .reward-active { color: #f59e0b !important; transform: scale(1.1); font-weight: bold; }
+        .completed { background-color: #10b981 !important; color: white !important; border-color: #059669 !important; }
+        .failed { background-color: #ef4444 !important; color: white !important; border-color: #dc2626 !important; }
+        .reward-active { color: #d97706 !important; font-weight: 800; transform: scale(1.05); }
+        /* 鎖定禁止點擊的手勢 */
+        .no-click { pointer-events: none; }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen p-4">
+<body class="bg-slate-50 min-h-screen p-4 font-sans select-none">
 
-    <div id="login-view" class="max-w-md mx-auto bg-white p-8 rounded-2xl shadow-xl mt-10">
-        <h1 class="text-2xl font-bold text-center mb-2">校慶闖關登入</h1>
-        <p class="text-center text-gray-500 mb-6 text-sm">歡迎來到修德 60 周年慶典</p>
-        <input type="text" id="class-input" placeholder="請輸入班級" class="w-full p-3 border rounded-xl mb-4">
-        <input type="text" id="no-input" placeholder="請輸入座號" class="w-full p-3 border rounded-xl mb-6">
-        <button id="login-btn" class="w-full bg-indigo-600 text-white p-3 rounded-xl font-bold">開始闖關</button>
+    <div id="login-view" class="max-w-md mx-auto bg-white p-8 rounded-3xl shadow-2xl mt-10 border border-gray-100">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-extrabold text-indigo-900">修德 60 周年</h1>
+            <p class="text-gray-500 mt-2 font-medium">校慶闖關系統</p>
+        </div>
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-1 ml-1">班級</label>
+                <input type="text" id="class-input" placeholder="例如：601" class="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-indigo-500 outline-none transition-all">
+            </div>
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-1 ml-1">座號</label>
+                <input type="text" id="no-input" placeholder="例如：05" class="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-indigo-500 outline-none transition-all">
+            </div>
+            <button id="login-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white p-4 rounded-2xl font-bold text-lg shadow-lg shadow-indigo-200 transition-all active:scale-95 mt-4">
+                開始闖關之旅
+            </button>
+        </div>
     </div>
 
     <div id="game-view" class="hidden max-w-2xl mx-auto">
-        <div class="bg-white p-4 rounded-xl shadow mb-6 text-center relative">
-            <h2 id="user-display" class="font-bold text-lg mb-2"></h2>
+        <div class="bg-white p-6 rounded-3xl shadow-xl mb-6 text-center relative border border-gray-50">
+            <h2 id="user-display" class="font-black text-xl text-indigo-900 mb-3"></h2>
             
-            <div class="flex justify-around items-center bg-gray-50 p-3 rounded-lg border border-dashed border-gray-300 mb-4">
-                <div id="reward-3" class="text-gray-400 text-sm">🥉 3關: 小獎</div>
-                <div id="reward-7" class="text-gray-400 text-sm">🥈 7關: 中級獎</div>
-                <div id="reward-11" class="text-gray-400 text-sm">🏆 11關: 大獎</div>
+            <div class="flex justify-around items-center bg-indigo-50/50 p-4 rounded-2xl mb-4 border border-indigo-100">
+                <div id="reward-3" class="text-gray-400 text-xs flex flex-col items-center">
+                    <span class="text-xl mb-1">🥉</span><span>3關小獎</span>
+                </div>
+                <div id="reward-7" class="text-gray-400 text-xs flex flex-col items-center">
+                    <span class="text-xl mb-1">🥈</span><span>7關中級獎</span>
+                </div>
+                <div id="reward-11" class="text-gray-400 text-xs flex flex-col items-center">
+                    <span class="text-xl mb-1">🏆</span><span>11關大獎</span>
+                </div>
             </div>
 
-            <p id="progress" class="text-indigo-600 font-bold">完成 0 / 11 關</p>
-            <p class="text-[10px] text-gray-400 mt-1">請至各關卡掃描 QR Code 挑戰</p>
-            <button onclick="logout()" class="absolute top-2 right-2 text-xs text-gray-400 underline">登出/重設</button>
+            <div class="flex justify-between items-end px-2">
+                <p id="progress" class="text-indigo-600 font-black text-lg">完成進度 0 / 11</p>
+                <button onclick="logout()" class="text-xs text-gray-400 hover:text-red-500 underline decoration-dotted">重設進度</button>
+            </div>
         </div>
-        <div id="grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
+
+        <div id="grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"></div>
+        
+        <p class="text-center text-gray-400 text-[11px] mt-8 font-medium italic">
+            提示：本系統採實地闖關制，請至各站點掃描 QR Code 開啟題目
+        </p>
     </div>
 
-    <div id="quiz-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-        <div class="bg-white p-8 rounded-2xl w-full max-w-lg shadow-2xl">
-            <h2 id="quiz-title" class="text-xl font-bold mb-4"></h2>
+    <div id="quiz-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div class="bg-white p-8 rounded-[2rem] w-full max-w-lg shadow-2xl border border-white">
+            <div id="quiz-header" class="mb-6"></div>
             <div id="options" class="space-y-3"></div>
-            <button onclick="closeModal()" class="mt-4 w-full text-gray-400 text-sm italic underline text-center">暫時關閉</button>
+            <button onclick="closeModal()" class="mt-8 w-full text-gray-400 text-sm font-bold tracking-widest hover:text-indigo-600 transition-colors">
+                暫時離開
+            </button>
         </div>
     </div>
 
@@ -61,104 +89,103 @@
             11: { name: "Soccer選一選！", q: "請問足球是用身體哪一個部位的運動?", a: ["(A) 手", "(B) 腳"], ans: 1 }
         };
 
-        let state = JSON.parse(localStorage.getItem('quiz_state')) || { user: null, done: [], failed: [] };
+        // 持久化存檔
+        let state = JSON.parse(localStorage.getItem('xiude_60th_state')) || { user: null, done: [], failed: [] };
 
-        function saveState() {
-            localStorage.setItem('quiz_state', JSON.stringify(state));
-        }
+        function save() { localStorage.setItem('xiude_60th_state', JSON.stringify(state)); }
 
         function renderGrid() {
             const grid = document.getElementById('grid');
             grid.innerHTML = '';
             for(let i = 1; i <= 11; i++) {
-                let css = 'bg-white text-gray-800';
-                if(state.done.includes(i)) css = 'completed';
-                else if(state.failed.includes(i)) css = 'failed';
+                let statusClass = 'bg-white text-slate-400 border-gray-100';
+                if(state.done.includes(i)) statusClass = 'completed shadow-md shadow-emerald-100';
+                else if(state.failed.includes(i)) statusClass = 'failed shadow-md shadow-red-100';
                 
-                // 這裡移除了 onclick 和 cursor-pointer，確保學生不能亂點其他關卡
                 grid.innerHTML += `
-                    <div class="p-3 ${css} rounded-xl shadow text-center flex flex-col justify-center items-center min-h-[90px]">
-                        <span class="text-[10px] opacity-70 uppercase tracking-tighter">Stage ${i}</span>
-                        <span class="font-bold text-xs mt-1 leading-tight">${STAGE_DATA[i].name}</span>
+                    <div class="p-4 ${statusClass} rounded-2xl border-2 text-center flex flex-col justify-center items-center min-h-[100px] no-click transition-all">
+                        <span class="text-[9px] font-bold uppercase opacity-60">Stage ${i}</span>
+                        <span class="font-extrabold text-[13px] mt-1 leading-tight text-slate-700">${STAGE_DATA[i].name}</span>
                     </div>`;
             }
-            
             const count = state.done.length;
-            document.getElementById('progress').innerText = `完成 ${count} / 11 關`;
-            
-            if(count >= 3) document.getElementById('reward-3').className = 'reward-active text-amber-600';
-            if(count >= 7) document.getElementById('reward-7').className = 'reward-active text-slate-500';
-            if(count >= 11) document.getElementById('reward-11').className = 'reward-active text-yellow-500';
+            document.getElementById('progress').innerText = `完成進度 ${count} / 11`;
+            if(count >= 3) document.getElementById('reward-3').classList.add('reward-active');
+            if(count >= 7) document.getElementById('reward-7').classList.add('reward-active');
+            if(count >= 11) document.getElementById('reward-11').classList.add('reward-active');
         }
 
         function openQuiz(id) {
             const sId = parseInt(id);
-            if(state.done.includes(sId)) return alert("這關已經通過囉！");
-            if(state.failed.includes(sId)) return alert("很遺憾，這關已失敗鎖定。");
+            if(state.done.includes(sId)) return; // 已過關不重複彈窗
+            if(state.failed.includes(sId)) return alert("此關卡回答錯誤已被鎖定。");
+            
             document.getElementById('quiz-modal').classList.remove('hidden');
-            
-            document.getElementById('quiz-title').innerHTML = `
-                <span class="text-indigo-600 text-xs block mb-1 font-mono">STEP ${id}: ${STAGE_DATA[id].name}</span>
-                <span class="text-lg">${STAGE_DATA[id].q}</span>
+            document.getElementById('quiz-header').innerHTML = `
+                <p class="text-indigo-600 font-bold text-sm mb-1 uppercase tracking-widest">挑戰開始 · 第 ${id} 關</p>
+                <h3 class="text-gray-400 text-xs font-medium mb-3">${STAGE_DATA[id].name}</h3>
+                <h2 class="text-xl font-black text-slate-800 leading-snug">${STAGE_DATA[id].q}</h2>
             `;
-            
             const optDiv = document.getElementById('options');
             optDiv.innerHTML = '';
             STAGE_DATA[id].a.forEach((txt, i) => {
-                optDiv.innerHTML += `<button onclick="check(${id}, ${i})" class="w-full p-4 border-2 rounded-xl hover:bg-indigo-50 text-left transition-all font-medium active:scale-95">${txt}</button>`;
+                optDiv.innerHTML += `
+                    <button onclick="check(${id}, ${i})" class="w-full p-5 border-2 border-slate-100 rounded-2xl hover:border-indigo-500 hover:bg-indigo-50 text-left font-bold text-slate-700 transition-all active:scale-[0.98]">
+                        ${txt}
+                    </button>`;
             });
         }
 
         function check(id, selected) {
             if(selected === STAGE_DATA[id].ans) {
-                state.done.push(parseInt(id));
-                alert("答對了！恭喜！");
-                const currentCount = state.done.length;
-                if(currentCount === 3) alert("🎉 恭喜達成 3 關！可以領取「小獎」囉！");
-                if(currentCount === 7) alert("🎊 厲害！達成 7 關，獲得「中級獎」兌換資格！");
-                if(currentCount === 11) alert("👑 完美通關！你是修德闖關王，領取「大獎」吧！");
+                if(!state.done.includes(id)) state.done.push(id);
+                alert("答對了！恭喜完成！");
+                const count = state.done.length;
+                if(count === 3) alert("🎉 恭喜！已達成 3 關，請至兌獎處領取「小獎」！");
+                if(count === 7) alert("🎊 太厲害了！已達成 7 關，獲得「中級獎」領取資格！");
+                if(count === 11) alert("👑 傳奇誕生！你已完成所有挑戰，快去領取「終極大獎」！");
             } else {
-                state.failed.push(parseInt(id));
-                alert("答案錯誤，關卡已被鎖定囉！");
+                if(!state.failed.includes(id)) state.failed.push(id);
+                alert("答案錯誤，本關卡已鎖定。");
             }
-            saveState();
-            document.getElementById('quiz-modal').classList.add('hidden');
+            save();
+            closeModal();
             renderGrid();
+            // 答完後清除網址參數，防止重新整理後再次彈窗
+            window.history.replaceState({}, document.title, window.location.pathname);
         }
 
         function logout() {
-            if(confirm("確定要重設紀錄嗎？")) {
-                localStorage.removeItem('quiz_state');
-                location.reload();
+            if(confirm("重設進度將清空所有已過關紀錄，確定要重來嗎？")) {
+                localStorage.removeItem('xiude_60th_state');
+                location.href = window.location.pathname;
             }
         }
 
-        function closeModal() {
-            document.getElementById('quiz-modal').classList.add('hidden');
+        function closeModal() { document.getElementById('quiz-modal').classList.add('hidden'); }
+
+        function showGame() {
+            document.getElementById('login-view').classList.add('hidden');
+            document.getElementById('game-view').classList.remove('hidden');
+            document.getElementById('user-display').innerText = `${state.user.cls} 班 ${state.user.no} 號`;
+            renderGrid();
+            const s = new URLSearchParams(window.location.search).get('stage');
+            if(s && STAGE_DATA[s]) {
+                setTimeout(() => openQuiz(s), 500);
+            }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
             if(state.user) showGame();
             document.getElementById('login-btn').addEventListener('click', () => {
-                const cls = document.getElementById('class-input').value;
-                const no = document.getElementById('no-input').value;
+                const cls = document.getElementById('class-input').value.trim();
+                const no = document.getElementById('no-input').value.trim();
                 if(!cls || !no) return alert("請輸入班級與座號");
                 state.user = { cls, no };
-                saveState();
+                save();
                 showGame();
             });
         });
-
-        function showGame() {
-            document.getElementById('login-view').classList.add('hidden');
-            document.getElementById('game-view').classList.remove('hidden');
-            document.getElementById('user-display').innerText = `${state.user.cls}班 ${state.user.no}號`;
-            renderGrid();
-            
-            // 唯一觸發題目的地方：讀取網址的 stage 參數
-            const s = new URLSearchParams(window.location.search).get('stage');
-            if(s && STAGE_DATA[s]) setTimeout(() => openQuiz(s), 500);
-        }
     </script>
 </body>
 </html>
