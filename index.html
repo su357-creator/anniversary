@@ -60,7 +60,7 @@
         <div id="grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"></div>
         
         <p class="text-center text-gray-400 text-[11px] mt-8 font-medium italic">
-            提示：本系統採現場闖關制，請至各站點掃描 QR Code 開啟題目
+            提示：本系統採實地闖關制，請至各站點掃描 QR Code 開啟題目
         </p>
     </div>
 
@@ -89,8 +89,8 @@
             11: { name: "Soccer選一選！", q: "請問足球是用身體哪一個部位的運動?", a: ["(A) 手", "(B) 腳"], ans: 1 }
         };
 
-        // 持久化存檔
-        let state = JSON.parse(localStorage.getItem('xiude_60th_state')) || { user: null, done: [], failed: [] };
+        // 持久化存檔 (新增 hasSubmitted 標記)
+        let state = JSON.parse(localStorage.getItem('xiude_60th_state')) || { user: null, done: [], failed: [], hasSubmitted: false };
 
         function save() { localStorage.setItem('xiude_60th_state', JSON.stringify(state)); }
 
@@ -117,7 +117,7 @@
 
         function openQuiz(id) {
             const sId = parseInt(id);
-            if(state.done.includes(sId)) return; // 已過關不重複彈窗
+            if(state.done.includes(sId)) return;
             if(state.failed.includes(sId)) return alert("此關卡回答錯誤已被鎖定。");
             
             document.getElementById('quiz-modal').classList.remove('hidden');
@@ -136,11 +136,41 @@
             });
         }
 
+        // 將資料傳送到 Google Sheets
+        function sendDataToGoogleSheet() {
+            if (state.hasSubmitted) return; // 避免重複送出
+            
+            // 這裡已填入你提供的 GAS 網址
+            const GAS_URL = "https://script.google.com/macros/s/AKfycbzbtfyfatz7lfQ4_AS2RLquv2pJhhUNB5aPiJlIbLyfHzM3uzRl1gMU6gcnmnsKnhln8A/exec";
+            
+            const payload = {
+                cls: state.user.cls,
+                no: state.user.no,
+                doneCount: state.done.length
+            };
+
+            fetch(GAS_URL, {
+                method: "POST",
+                mode: "no-cors",
+                body: JSON.stringify(payload)
+            }).then(() => {
+                state.hasSubmitted = true;
+                save();
+                alert("🎊 恭喜！您已達成 9 關，資料已自動登錄抽獎名單！");
+            }).catch(err => console.error("傳送失敗：", err));
+        }
+
         function check(id, selected) {
             if(selected === STAGE_DATA[id].ans) {
                 if(!state.done.includes(id)) state.done.push(id);
                 alert("答對了！恭喜完成！");
                 const count = state.done.length;
+                
+                // 滿 9 關自動登記
+                if(count === 9) {
+                    sendDataToGoogleSheet();
+                }
+                
                 if(count === 3) alert("🎉 恭喜！已達成 3 關，請至兌獎處領取「小獎」！");
                 if(count === 7) alert("🎊 太厲害了！已達成 7 關，獲得「中級獎」領取資格！");
                 if(count === 11) alert("👑 傳奇誕生！你已完成所有挑戰，快去領取「終極大獎」！");
@@ -151,7 +181,6 @@
             save();
             closeModal();
             renderGrid();
-            // 答完後清除網址參數，防止重新整理後再次彈窗
             window.history.replaceState({}, document.title, window.location.pathname);
         }
 
@@ -170,18 +199,17 @@
             document.getElementById('user-display').innerText = `${state.user.cls} 班 ${state.user.no} 號`;
             renderGrid();
             
-            // --- 加密對照表開始 ---
+            // 加密網址對照表
             const SECRET_MAP = {
                 "aX7k": 1, "mP2q": 2, "vN9d": 3, "bR4w": 4, "tC8f": 5,
                 "hY5j": 6, "eZ3s": 7, "kL6m": 8, "pW1v": 9, "dG8n": 10, "qF4b": 11
             };
             const s = new URLSearchParams(window.location.search).get('stage');
-            const realStage = SECRET_MAP[s]; // 將亂碼翻譯回真實關卡數字
+            const realStage = SECRET_MAP[s];
             
             if(realStage && STAGE_DATA[realStage]) {
                 setTimeout(() => openQuiz(realStage), 500);
             }
-            // --- 加密對照表結束 ---
         }
 
         document.addEventListener('DOMContentLoaded', () => {
