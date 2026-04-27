@@ -53,7 +53,8 @@
 
             <div class="flex justify-between items-end px-2">
                 <p id="progress" class="text-indigo-600 font-black text-lg">完成進度 0 / 11</p>
-                </div>
+                <button onclick="logout()" class="text-xs text-gray-400 hover:text-red-500 underline decoration-dotted">重設進度</button>
+            </div>
         </div>
 
         <div id="grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"></div>
@@ -215,6 +216,15 @@
             closeModal();
             renderGrid();
             window.history.replaceState({}, document.title, window.location.pathname);
+        }
+
+        // 登出與重設進度功能
+        function logout() {
+            if(confirm("重設進度將清空所有已過關紀錄，確定要換人闖關或重來嗎？")) {
+                localStorage.removeItem('xiude_60th_state');
+                // 導向根目錄，避免網址殘留參數
+                location.href = window.location.pathname;
+            }
         }
 
         function closeModal() { 
