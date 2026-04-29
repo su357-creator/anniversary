@@ -9,7 +9,6 @@
         .completed { background-color: #10b981 !important; color: white !important; border-color: #059669 !important; }
         .failed { background-color: #ef4444 !important; color: white !important; border-color: #dc2626 !important; }
         .reward-active { color: #d97706 !important; font-weight: 800; transform: scale(1.05); }
-        /* 鎖定禁止點擊的手勢 */
         .no-click { pointer-events: none; }
     </style>
 </head>
@@ -89,10 +88,27 @@
             11: { name: "Soccer選一選！", q: "請問足球是用身體哪一個部位的運動?", a: ["(A) 手", "(B) 腳"], ans: 1 }
         };
 
-        // 持久化存檔
-        let state = JSON.parse(localStorage.getItem('xiude_60th_state')) || { user: null, done: [], failed: [], hasSubmitted: false };
+        // --- 強化版的資料讀取邏輯 ---
+        let state;
+        try {
+            const saved = localStorage.getItem('xiude_60th_state');
+            state = saved ? JSON.parse(saved) : { user: null, done: [], failed: [], hasSubmitted: false };
+            
+            // 強制格式化 done 和 failed 清單，確保裡面都是數字
+            state.done = (state.done || []).map(Number);
+            state.failed = (state.failed || []).map(Number);
+        } catch (e) {
+            console.error("資料讀取失敗，重設 state", e);
+            state = { user: null, done: [], failed: [], hasSubmitted: false };
+        }
 
-        function save() { localStorage.setItem('xiude_60th_state', JSON.stringify(state)); }
+        function save() { 
+            try {
+                localStorage.setItem('xiude_60th_state', JSON.stringify(state)); 
+            } catch (e) {
+                console.error("存檔失敗：", e);
+            }
+        }
 
         function renderGrid() {
             const grid = document.getElementById('grid');
@@ -110,26 +126,19 @@
             }
             const count = state.done.length;
             document.getElementById('progress').innerText = `完成進度 ${count} / 11`;
+            
+            // 更新進度條顯示
+            ['reward-3', 'reward-7', 'reward-11'].forEach(id => document.getElementById(id).classList.remove('reward-active'));
             if(count >= 3) document.getElementById('reward-3').classList.add('reward-active');
             if(count >= 7) document.getElementById('reward-7').classList.add('reward-active');
             if(count >= 11) document.getElementById('reward-11').classList.add('reward-active');
         }
 
-        // 語音朗讀功能 (加入安全檢查)
         function playAudio(id) {
-            if (!('speechSynthesis' in window)) {
-                return alert("您目前使用的瀏覽器不支援語音朗讀功能喔！建議使用 Chrome 或 Safari 開啟。");
-            }
-            
-            // 先停止可能正在播放的聲音，避免重疊
+            if (!('speechSynthesis' in window)) return alert("此瀏覽器不支援語音。");
             window.speechSynthesis.cancel(); 
-            
             const stage = STAGE_DATA[id];
-            let textToRead = `第 ${id} 關。${stage.name}。${stage.q} `;
-            stage.a.forEach((opt) => {
-                textToRead += `。${opt}`;
-            });
-
+            let textToRead = `第 ${id} 關。${stage.name}。${stage.q}。選項 A：${stage.a[0]}。選項 B：${stage.a[1]}`;
             const utterance = new SpeechSynthesisUtterance(textToRead);
             utterance.lang = 'zh-TW'; 
             utterance.rate = 0.85;    
@@ -137,7 +146,7 @@
         }
 
         function openQuiz(id) {
-            const sId = parseInt(id);
+            const sId = Number(id); // 強制轉數字
             if(state.done.includes(sId)) return;
             if(state.failed.includes(sId)) return alert("此關卡回答錯誤已被鎖定。");
             
@@ -162,76 +171,47 @@
             });
         }
 
-        // 將資料傳送到 Google Sheets
         function sendDataToGoogleSheet() {
             if (state.hasSubmitted) return; 
-            
             const GAS_URL = "https://script.google.com/macros/s/AKfycbzbtfyfatz7lfQ4_AS2RLquv2pJhhUNB5aPiJlIbLyfHzM3uzRl1gMU6gcnmnsKnhln8A/exec";
-            
-            const payload = {
-                cls: state.user.cls,
-                no: state.user.no,
-                doneCount: state.done.length
-            };
-
-            fetch(GAS_URL, {
-                method: "POST",
-                mode: "no-cors",
-                body: JSON.stringify(payload)
-            }).then(() => {
-                state.hasSubmitted = true;
-                save();
-                alert("🎊 恭喜！您已達成 9 關，資料已自動登錄抽獎名單！");
-            }).catch(err => console.error("傳送失敗：", err));
+            const payload = { cls: state.user.cls, no: state.user.no, doneCount: state.done.length };
+            fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(payload) })
+            .then(() => { state.hasSubmitted = true; save(); alert("🎊 恭喜達成 9 關，抽獎名單已自動登記！"); })
+            .catch(err => console.error("傳送失敗：", err));
         }
 
         function check(id, selected) {
-            // 安全停止語音：先檢查瀏覽器是否支援，避免當機
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-            }
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            const sId = Number(id);
 
-            if(selected === STAGE_DATA[id].ans) {
-                if(!state.done.includes(id)) state.done.push(id);
-                // 為了避免 alert 被擋住，先存檔再跳提示
+            if(selected === STAGE_DATA[sId].ans) {
+                if(!state.done.includes(sId)) state.done.push(sId);
                 save(); 
                 alert("答對了！恭喜完成！");
-                
                 const count = state.done.length;
-                
-                // 滿 9 關自動登記抽獎
-                if(count === 9) {
-                    sendDataToGoogleSheet();
-                }
-                
-                if(count === 3) alert("🎉 恭喜！已達成 3 關，請至兌獎處領取「小獎」！");
-                if(count === 7) alert("🎊 太厲害了！已達成 7 關，獲得「中級獎」領取資格！");
-                if(count === 11) alert("👑 傳奇誕生！你已完成所有挑戰，快去領取「終極大獎」！");
+                if(count === 9) sendDataToGoogleSheet();
+                if(count === 3) alert("🎉 已達成 3 關，請至兌獎處領取小獎！");
+                if(count === 7) alert("🎊 已達成 7 關，獲得中級獎資格！");
+                if(count === 11) alert("👑 全數完成！快去領取終極大獎！");
             } else {
-                if(!state.failed.includes(id)) state.failed.push(id);
+                if(!state.failed.includes(sId)) state.failed.push(sId);
                 save();
                 alert("答案錯誤，本關卡已鎖定。");
             }
-            
             closeModal();
             renderGrid();
             window.history.replaceState({}, document.title, window.location.pathname);
         }
 
-        // 登出與重設進度功能
         function logout() {
-            if(confirm("重設進度將清空所有已過關紀錄，確定要換人闖關或重來嗎？")) {
+            if(confirm("確定要換人闖關嗎？這將清除目前手機上的紀錄。")) {
                 localStorage.removeItem('xiude_60th_state');
-                // 導向根目錄，避免網址殘留參數
                 location.href = window.location.pathname;
             }
         }
 
         function closeModal() { 
-            // 離開題目視窗時，安全停止語音播放
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-            }
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
             document.getElementById('quiz-modal').classList.add('hidden'); 
         }
 
@@ -241,29 +221,30 @@
             document.getElementById('user-display').innerText = `${state.user.cls} 班 ${state.user.no} 號`;
             renderGrid();
             
-            // 加密網址對照表
             const SECRET_MAP = {
                 "aX7k": 1, "mP2q": 2, "vN9d": 3, "bR4w": 4, "tC8f": 5,
                 "hY5j": 6, "eZ3s": 7, "kL6m": 8, "pW1v": 9, "dG8n": 10, "qF4b": 11
             };
             const s = new URLSearchParams(window.location.search).get('stage');
             const realStage = SECRET_MAP[s];
-            
             if(realStage && STAGE_DATA[realStage]) {
                 setTimeout(() => openQuiz(realStage), 500);
             }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            if(state.user) showGame();
-            document.getElementById('login-btn').addEventListener('click', () => {
-                const cls = document.getElementById('class-input').value.trim();
-                const no = document.getElementById('no-input').value.trim();
-                if(!cls || !no) return alert("請輸入班級與座號");
-                state.user = { cls, no };
-                save();
+            if(state.user) {
                 showGame();
-            });
+            } else {
+                document.getElementById('login-btn').addEventListener('click', () => {
+                    const cls = document.getElementById('class-input').value.trim();
+                    const no = document.getElementById('no-input').value.trim();
+                    if(!cls || !no) return alert("請輸入班級與座號");
+                    state.user = { cls, no };
+                    save();
+                    showGame();
+                });
+            }
         });
     </script>
 </body>
