@@ -9,6 +9,7 @@
         .completed { background-color: #10b981 !important; color: white !important; border-color: #059669 !important; }
         .failed { background-color: #ef4444 !important; color: white !important; border-color: #dc2626 !important; }
         .reward-active { color: #d97706 !important; font-weight: 800; transform: scale(1.05); }
+        /* 鎖定禁止點擊的手勢 */
         .no-click { pointer-events: none; }
     </style>
 </head>
@@ -39,21 +40,20 @@
             <h2 id="user-display" class="font-black text-xl text-indigo-900 mb-3"></h2>
             
             <div class="flex justify-around items-center bg-indigo-50/50 p-4 rounded-2xl mb-4 border border-indigo-100">
-                <div id="reward-3" class="text-gray-400 text-xs flex flex-col items-center">
-                    <span class="text-xl mb-1">🥉</span><span>3關小獎</span>
+                <div id="reward-6" class="text-gray-400 text-xs flex flex-col items-center transition-all">
+                    <span class="text-xl mb-1">🍪</span><span>6關煎餅</span>
                 </div>
-                <div id="reward-7" class="text-gray-400 text-xs flex flex-col items-center">
-                    <span class="text-xl mb-1">🥈</span><span>7關中級獎</span>
+                <div id="reward-9" class="text-gray-400 text-xs flex flex-col items-center transition-all">
+                    <span class="text-xl mb-1">🐿️</span><span>9關娃娃摸彩</span>
                 </div>
-                <div id="reward-11" class="text-gray-400 text-xs flex flex-col items-center">
-                    <span class="text-xl mb-1">🏆</span><span>11關大獎</span>
+                <div id="reward-11" class="text-gray-400 text-xs flex flex-col items-center transition-all">
+                    <span class="text-xl mb-1">👑</span><span>11關全破</span>
                 </div>
             </div>
 
             <div class="flex justify-between items-end px-2">
                 <p id="progress" class="text-indigo-600 font-black text-lg">完成進度 0 / 11</p>
-                <button onclick="logout()" class="text-xs text-gray-400 hover:text-red-500 underline decoration-dotted">重設進度</button>
-            </div>
+                </div>
         </div>
 
         <div id="grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"></div>
@@ -88,17 +88,14 @@
             11: { name: "Soccer選一選！", q: "請問足球是用身體哪一個部位的運動?", a: ["(A) 手", "(B) 腳"], ans: 1 }
         };
 
-        // --- 強化版的資料讀取邏輯 ---
+        // 資料讀取邏輯
         let state;
         try {
             const saved = localStorage.getItem('xiude_60th_state');
             state = saved ? JSON.parse(saved) : { user: null, done: [], failed: [], hasSubmitted: false };
-            
-            // 強制格式化 done 和 failed 清單，確保裡面都是數字
             state.done = (state.done || []).map(Number);
             state.failed = (state.failed || []).map(Number);
         } catch (e) {
-            console.error("資料讀取失敗，重設 state", e);
             state = { user: null, done: [], failed: [], hasSubmitted: false };
         }
 
@@ -106,7 +103,7 @@
             try {
                 localStorage.setItem('xiude_60th_state', JSON.stringify(state)); 
             } catch (e) {
-                console.error("存檔失敗：", e);
+                console.error("存檔失敗", e);
             }
         }
 
@@ -127,10 +124,12 @@
             const count = state.done.length;
             document.getElementById('progress').innerText = `完成進度 ${count} / 11`;
             
-            // 更新進度條顯示
-            ['reward-3', 'reward-7', 'reward-11'].forEach(id => document.getElementById(id).classList.remove('reward-active'));
-            if(count >= 3) document.getElementById('reward-3').classList.add('reward-active');
-            if(count >= 7) document.getElementById('reward-7').classList.add('reward-active');
+            // 更新進度條顯示 (改為 6, 9, 11)
+            ['reward-6', 'reward-9', 'reward-11'].forEach(id => {
+                if(document.getElementById(id)) document.getElementById(id).classList.remove('reward-active');
+            });
+            if(count >= 6) document.getElementById('reward-6').classList.add('reward-active');
+            if(count >= 9) document.getElementById('reward-9').classList.add('reward-active');
             if(count >= 11) document.getElementById('reward-11').classList.add('reward-active');
         }
 
@@ -146,7 +145,7 @@
         }
 
         function openQuiz(id) {
-            const sId = Number(id); // 強制轉數字
+            const sId = Number(id);
             if(state.done.includes(sId)) return;
             if(state.failed.includes(sId)) return alert("此關卡回答錯誤已被鎖定。");
             
@@ -176,8 +175,13 @@
             const GAS_URL = "https://script.google.com/macros/s/AKfycbzbtfyfatz7lfQ4_AS2RLquv2pJhhUNB5aPiJlIbLyfHzM3uzRl1gMU6gcnmnsKnhln8A/exec";
             const payload = { cls: state.user.cls, no: state.user.no, doneCount: state.done.length };
             fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(payload) })
-            .then(() => { state.hasSubmitted = true; save(); alert("🎊 恭喜達成 9 關，抽獎名單已自動登記！"); })
-            .catch(err => console.error("傳送失敗：", err));
+            .then(() => { 
+                state.hasSubmitted = true; 
+                save(); 
+                // 9關專屬恭喜訊息
+                alert("🎊 太厲害了！已達成 9 關！\n您除了可兌換小林煎餅外，更獲得「松鼠娃娃摸彩資格」，抽獎名單已自動為您登記！"); 
+            })
+            .catch(err => console.error("傳送失敗", err));
         }
 
         function check(id, selected) {
@@ -189,10 +193,11 @@
                 save(); 
                 alert("答對了！恭喜完成！");
                 const count = state.done.length;
-                if(count === 9) sendDataToGoogleSheet();
-                if(count === 3) alert("🎉 已達成 3 關，請至兌獎處領取小獎！");
-                if(count === 7) alert("🎊 已達成 7 關，獲得中級獎資格！");
-                if(count === 11) alert("👑 全數完成！快去領取終極大獎！");
+                
+                // 獎勵判定邏輯
+                if(count === 6) alert("🎉 恭喜！已達成 6 關，請至兌獎處兌換「小林煎餅」！");
+                if(count === 9) sendDataToGoogleSheet(); // 裡面包含9關的特殊Alert
+                if(count === 11) alert("👑 傳奇誕生！你已完成所有 11 個挑戰，達成完全制霸！");
             } else {
                 if(!state.failed.includes(sId)) state.failed.push(sId);
                 save();
@@ -201,13 +206,6 @@
             closeModal();
             renderGrid();
             window.history.replaceState({}, document.title, window.location.pathname);
-        }
-
-        function logout() {
-            if(confirm("確定要換人闖關嗎？這將清除目前手機上的紀錄。")) {
-                localStorage.removeItem('xiude_60th_state');
-                location.href = window.location.pathname;
-            }
         }
 
         function closeModal() { 
