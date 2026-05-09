@@ -9,7 +9,6 @@
         .completed { background-color: #10b981 !important; color: white !important; border-color: #059669 !important; }
         .failed { background-color: #ef4444 !important; color: white !important; border-color: #dc2626 !important; }
         .reward-active { color: #d97706 !important; font-weight: 800; transform: scale(1.05); }
-        /* 鎖定禁止點擊的手勢 */
         .no-click { pointer-events: none; }
     </style>
 </head>
@@ -75,37 +74,37 @@
 
     <script>
         const STAGE_DATA = {
-            1: { name: "Classroom!  What’s Your Name?", q: "歡迎來到修德藝術殿堂！請觀察一下，這間位於龍鳳樓五樓的美術教室，真正的名稱是什麼呢？", a: ["(A) 龍飛鳳舞", "(B) 修德 Art Masters Studio"], ans: 1 },
-            2: { name: "Our Amazing Art Exhibition!", q: "進入展區欣賞精美作品時，別忘了抬頭看看門口或牆上的大海報，請問今年美術班展覽的主題名稱是？", a: ["(A) 時空藝象", "(B) 藝於常人"], ans: 0 },
-            3: { name: "Love the Rainbow Colors!", q: "修德慶祝 60 周年啦！請環顧一下校園四周的慶典布置，這六十周年的主色系是由哪四色構成的呢？", a: ["(A) 紅、黃、藍、綠", "(B) 灰、黑、白、粉"], ans: 0 },
+            1: { name: "藝海尋蹤・樓層大解密", q: "歡迎來到修德藝術殿堂！請觀察一下，這間位於龍鳳樓五樓的美術教室，真正的名稱是什麼呢？", a: ["(A) 龍飛鳳舞", "(B) 修德 Art Center"], ans: 1 },
+            2: { name: "藝想天開・策展小達人", q: "進入展區欣賞精美作品時，別忘了抬頭看看門口或牆上的大海報，請問今年美術班展覽的主題名稱是？", a: ["(A) 時空藝象", "(B) 藝於常人"], ans: 0 },
+            3: { name: "繽紛甲子・校園調色盤", q: "修德慶祝 60 周年啦！請環顧一下校園四周的慶典布置，這六十周年的主色系是由哪四色構成的呢？", a: ["(A) 紅、黃、藍、綠", "(B) 灰、黑、白、粉"], ans: 0 },
             4: { name: "How old is Xiude?", q: "今年是修德實施雙語教學的第幾年呢?", a: ["(A) 第6年", "(B) 第16年"], ans: 0 },
             5: { name: "I love Bilingual!", q: "低年級雙語課是哪個領域?", a: ["(A) 雙語生活", "(B) 雙語綜合"], ans: 0 },
             6: { name: "We love English Day!", q: "每週的英語日是哪一天呢？", a: ["(A) Monday", "(B) Tuesday"], ans: 1 },
-            7: { name: "Xiude’s favorite!", q: "請問在修德最常見的動物是什麼？", a: ["(A) 松鼠", "(B) 天竺鼠"], ans: 0 },
-            8: { name: "Happy Mother’s Day!", q: "數一數，圖書館外面有幾朵康乃馨呢？", a: ["(A) 三朵", "(B) 六朵"], ans: 1 },
-            9: { name: "Hi! Xiude Boss!", q: "請問本校校長是幾號照片？", a: ["(A) 一號", "(B) 二號"], ans: 1 },
-            10: { name: "We Love Table Tennis!", q: "請問大部分的桌球拍拍面是哪兩種顏色的呢？", a: ["(A) 黑色、紅色", "(B) 白色、粉色"], ans: 0 },
-            11: { name: "We Love Soccer！", q: "請問足球是用身體哪一個部位的運動?", a: ["(A) 手", "(B) 腳"], ans: 1 }
+            7: { name: "Xiude吉祥物", q: "請問在修德最常見的動物是什麼？", a: ["(A) 松鼠", "(B) 天竺鼠"], ans: 0 },
+            8: { name: "Happy Mother’s Day!", q: "數一數，整個圖書館裡有幾朵康乃馨呢？", a: ["(A) 三朵", "(B) 六朵"], ans: 1 },
+            9: { name: "Hi! 修德 Boss!", q: "請問本校校長是幾號照片？", a: ["(A) 一號", "(B) 二號"], ans: 1 },
+            10: { name: "球拍大考驗", q: "請問大部分的桌球拍拍面是哪兩種顏色的呢？", a: ["(A) 黑色、紅色", "(B) 白色、粉色"], ans: 0 },
+            11: { name: "Soccer選一選！", q: "請問足球是用身體哪一個部位的運動?", a: ["(A) 手", "(B) 腳"], ans: 1 }
         };
 
-        // 資料讀取邏輯
+        // 資料讀取與狀態初始化
         let state;
         try {
             const saved = localStorage.getItem('xiude_60th_state');
-            state = saved ? JSON.parse(saved) : { user: null, done: [], failed: [], hasSubmitted: false };
+            state = saved ? JSON.parse(saved) : { 
+                user: null, 
+                done: [], 
+                failed: [], 
+                submitted6: false, // 紀錄 6 關是否已上傳
+                submitted9: false  // 紀錄 9 關是否已上傳
+            };
             state.done = (state.done || []).map(Number);
             state.failed = (state.failed || []).map(Number);
         } catch (e) {
-            state = { user: null, done: [], failed: [], hasSubmitted: false };
+            state = { user: null, done: [], failed: [], submitted6: false, submitted9: false };
         }
 
-        function save() { 
-            try {
-                localStorage.setItem('xiude_60th_state', JSON.stringify(state)); 
-            } catch (e) {
-                console.error("存檔失敗", e);
-            }
-        }
+        function save() { localStorage.setItem('xiude_60th_state', JSON.stringify(state)); }
 
         function renderGrid() {
             const grid = document.getElementById('grid');
@@ -123,11 +122,7 @@
             }
             const count = state.done.length;
             document.getElementById('progress').innerText = `完成進度 ${count} / 11`;
-            
-            // 更新進度條顯示 (改為 6, 9, 11)
-            ['reward-6', 'reward-9', 'reward-11'].forEach(id => {
-                if(document.getElementById(id)) document.getElementById(id).classList.remove('reward-active');
-            });
+            ['reward-6', 'reward-9', 'reward-11'].forEach(id => document.getElementById(id).classList.remove('reward-active'));
             if(count >= 6) document.getElementById('reward-6').classList.add('reward-active');
             if(count >= 9) document.getElementById('reward-9').classList.add('reward-active');
             if(count >= 11) document.getElementById('reward-11').classList.add('reward-active');
@@ -170,16 +165,26 @@
             });
         }
 
-        function sendDataToGoogleSheet() {
-            if (state.hasSubmitted) return; 
+        // 修改：增加里程碑參數，記錄是哪一個關卡上傳的
+        function sendDataToGoogleSheet(milestone) {
+            if (milestone === 6 && state.submitted6) return;
+            if (milestone === 9 && state.submitted9) return;
+            
             const GAS_URL = "https://script.google.com/macros/s/AKfycbzbtfyfatz7lfQ4_AS2RLquv2pJhhUNB5aPiJlIbLyfHzM3uzRl1gMU6gcnmnsKnhln8A/exec";
-            const payload = { cls: state.user.cls, no: state.user.no, doneCount: state.done.length };
+            const payload = { cls: state.user.cls, no: state.user.no, doneCount: milestone };
+
             fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(payload) })
             .then(() => { 
-                state.hasSubmitted = true; 
-                save(); 
-                // 9關專屬恭喜訊息
-                alert("🎊 太厲害了！已達成 9 關！\n您除了可兌換小林煎餅外，更獲得「松鼠娃娃摸彩資格」，抽獎名單已自動為您登記！"); 
+                if(milestone === 6) {
+                    state.submitted6 = true;
+                    save();
+                    alert("🍪 恭喜達成 6 關！「小林煎餅」兌換資格已記錄，請至兌獎處領取！");
+                }
+                if(milestone === 9) {
+                    state.submitted9 = true;
+                    save();
+                    alert("🐿️ 太棒了！已達成 9 關！「松鼠娃娃摸彩資格」已自動為您登記！");
+                }
             })
             .catch(err => console.error("傳送失敗", err));
         }
@@ -194,9 +199,9 @@
                 alert("答對了！恭喜完成！");
                 const count = state.done.length;
                 
-                // 獎勵判定邏輯
-                if(count === 6) alert("🎉 恭喜！已達成 6 關，請至兌獎處兌換「小林煎餅」！");
-                if(count === 9) sendDataToGoogleSheet(); // 裡面包含9關的特殊Alert
+                // 觸發上傳紀錄
+                if(count === 6) sendDataToGoogleSheet(6);
+                if(count === 9) sendDataToGoogleSheet(9);
                 if(count === 11) alert("👑 傳奇誕生！你已完成所有 11 個挑戰，達成完全制霸！");
             } else {
                 if(!state.failed.includes(sId)) state.failed.push(sId);
